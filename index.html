@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
+</head>
+<body>
+  <div class="main">
+    <div class="box">
+      <div class="inp">
+        <input type="text" placeholder="Enter City Name" id="cityInput"/>
+        <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </div>
+      <div class="box-main" id="weatherBox" style="display: none;">
+        <h1 id="country">City Name</h1>
+        <img src="images/default.png" alt="Weather Icon" class="weather" id="weatherIcon"/>
+        <h1 id="temp">0°C</h1>
+        <p id="des">Description</p>
+        <div class="two">
+          <div class="inner">
+            <div class="hum">
+              <img src="images/humidity.png" alt="Humidity Icon"/>
+              <h1 id="humidity">0%</h1>
+            </div>
+            <p>Humidity</p>
+          </div>
+          <div class="inner">
+            <div class="hum">
+              <img src="images/wind.png" alt="Wind Icon"/>
+              <h1 id="wind">0 km/h</h1>
+            </div>
+            <p>Wind Speed</p>
+          </div>
+        </div>
+      </div>
+      <p id="err" style="display: none; color: red;">City name is invalid</p>
+    </div>
+  </div>
+
+  <script>
+    const apiKey = "75b506f5918641b226f57ffdd4c8e029";
+    const weatherBox = document.getElementById("weatherBox");
+    const errorMsg = document.getElementById("err");
+    const weatherIcon = document.getElementById("weatherIcon");
+
+    const weatherIcons = {
+      Clouds: "images/clouds.png",
+      Clear: "images/clear.png",
+      Rain: "images/rain.png",
+      Mist: "images/mist.png",
+      Snow: "images/snow.png",
+      Drizzle: "images/drizzle.png",
+      Thunderstorm: "images/thunderstorm.png"
+    };
+
+    const checkWeather = async (city) => {
+      if (!city) {
+        errorMsg.textContent = "Please enter a city name.";
+        errorMsg.style.display = "block";
+        weatherBox.style.display = "none";
+        return;
+      }
+
+      const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&appid=${apiKey}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (response.status === 404 || data.cod === "404") {
+          errorMsg.textContent = "City name is invalid.";
+          errorMsg.style.display = "block";
+          weatherBox.style.display = "none";
+          return;
+        }
+
+        document.getElementById("country").textContent = data.name;
+        document.getElementById("temp").textContent = Math.round(data.main.temp) + "°C";
+        document.getElementById("des").textContent = data.weather[0].description;
+        document.getElementById("humidity").textContent = data.main.humidity + "%";
+        document.getElementById("wind").textContent = data.wind.speed + " km/h";
+
+        const weatherMain = data.weather[0].main;
+        weatherIcon.src = weatherIcons[weatherMain] || "images/default.png";
+
+        weatherBox.style.display = "block";
+        errorMsg.style.display = "none";
+      } catch (error) {
+        console.error("Error fetching weather data:", error);
+        errorMsg.textContent = "An error occurred while fetching data.";
+        errorMsg.style.display = "block";
+        weatherBox.style.display = "none";
+      }
+    };
+
+    document.getElementById("searchBtn").addEventListener("click", () => {
+      const city = document.getElementById("cityInput").value.trim();
+      checkWeather(city);
+    });
+
+    document.getElementById("cityInput").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        document.getElementById("searchBtn").click();
+      }
+    });
+  </script>
+</body>
+</html>
